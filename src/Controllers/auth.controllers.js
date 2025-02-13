@@ -1,6 +1,10 @@
-const { findUserByEmail, createUser } = require('../Models/auth.model');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const {
+  findUserByEmail,
+  createUser,
+  findUserAll,
+} = require("../Models/auth.model");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 exports.register = async (req, res) => {
   try {
@@ -11,7 +15,7 @@ exports.register = async (req, res) => {
     if (existingUser) {
       return res
         .status(400)
-        .json({ success: false, message: 'User already exists!' });
+        .json({ success: false, message: "User already exists!" });
     }
 
     // Encrypt password
@@ -22,11 +26,11 @@ exports.register = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'User registered successfully',
+      message: "User registered successfully",
     });
   } catch (error) {
     console.log(error);
-    res.status(500).send('Server error during registration');
+    res.status(500).send("Server error during registration");
   }
 };
 
@@ -39,7 +43,7 @@ exports.login = async (req, res) => {
     if (!user) {
       return res
         .status(400)
-        .json({ success: false, message: 'User not found' });
+        .json({ success: false, message: "User not found" });
     }
 
     // Check password
@@ -47,7 +51,7 @@ exports.login = async (req, res) => {
     if (!isPasswordValid) {
       return res
         .status(400)
-        .json({ success: false, message: 'Invalid password' });
+        .json({ success: false, message: "Invalid password" });
     }
 
     // Generate token
@@ -57,7 +61,7 @@ exports.login = async (req, res) => {
         email: user.email,
       },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: '15m' }
+      { expiresIn: "15m" }
     );
 
     const refreshToken = jwt.sign(
@@ -66,18 +70,37 @@ exports.login = async (req, res) => {
         email: user.email,
       },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: '1d' }
+      { expiresIn: "1d" }
     );
 
     res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       // userData: user,
       accessToken,
       refreshToken,
     });
   } catch (error) {
     console.log(error);
-    res.status(500).send('Server error during login');
+    res.status(500).send("Server error during login");
+  }
+};
+exports.findUserAll = async (req, res) => {
+  try {
+    const user = await findUserAll();
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "successful",
+      body: user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Server error during login");
   }
 };
