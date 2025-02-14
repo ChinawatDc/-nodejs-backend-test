@@ -13,7 +13,7 @@ const swaggerDefinition = {
       url: process.env.URL || "http://localhost:8080",
     },
   ],
-  tags: [{ name: "Users" }],
+  tags: [{ name: "Auth" }, { name: "Users" }],
   components: {
     securitySchemes: {
       bearerAuth: {

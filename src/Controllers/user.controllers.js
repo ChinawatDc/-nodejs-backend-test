@@ -1,10 +1,13 @@
 const { createResponse } = require("../utils/response.util");
 const { HTTP_STATUS } = require("../utils/httpStatus");
 const User = require("../Models/user.model");
-
+const bcrypt = require("bcrypt");
 // Create User
 const createUser = async (req, res) => {
   try {
+    const password = "123456";
+    const hashedPassword = await bcrypt.hash(password, 10);
+    req.body.password = hashedPassword;
     const user = await User.create(req.body);
     return res
       .status(HTTP_STATUS.CREATED.statusCode)
@@ -19,7 +22,10 @@ const createUser = async (req, res) => {
 // Get All Users
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.findAll();
+    const users = await User.findAll({
+      where: { deleted_at: null },
+      paranoid: false,
+    });
     return res
       .status(HTTP_STATUS.OK.statusCode)
       .json(createResponse(HTTP_STATUS.OK, users));
@@ -33,7 +39,10 @@ const getAllUsers = async (req, res) => {
 // Get User by ID
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id);
+    const user = await User.findByPk(req.params.id, {
+      where: { deleted_at: null },
+      paranoid: false,
+    });
     if (!user) {
       return res
         .status(HTTP_STATUS.NOT_FOUND.statusCode)
@@ -78,10 +87,37 @@ const deleteUser = async (req, res) => {
         .status(HTTP_STATUS.NOT_FOUND.statusCode)
         .json(createResponse(HTTP_STATUS.NOT_FOUND, "User not found"));
     }
-    await user.destroy();
+
+    // ใช้ Soft Delete โดยตั้งค่า deleted_at
+    await user.update({ deleted_at: new Date() });
+
     return res
       .status(HTTP_STATUS.OK.statusCode)
       .json(createResponse(HTTP_STATUS.OK, "User deleted successfully"));
+  } catch (error) {
+    return res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR.statusCode)
+      .json(createResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message));
+  }
+};
+
+const restoreUser = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id, { paranoid: false });
+    if (!user || user.deleted_at === null) {
+      return res
+        .status(HTTP_STATUS.NOT_FOUND.statusCode)
+        .json(
+          createResponse(HTTP_STATUS.NOT_FOUND, "User not found or not deleted")
+        );
+    }
+
+    // คืนค่าผู้ใช้ที่ถูกลบ
+    await user.update({ deleted_at: null });
+
+    return res
+      .status(HTTP_STATUS.OK.statusCode)
+      .json(createResponse(HTTP_STATUS.OK, "User restored successfully"));
   } catch (error) {
     return res
       .status(HTTP_STATUS.INTERNAL_SERVER_ERROR.statusCode)
@@ -95,4 +131,5 @@ module.exports = {
   getUserById,
   updateUser,
   deleteUser,
+  restoreUser,
 };
