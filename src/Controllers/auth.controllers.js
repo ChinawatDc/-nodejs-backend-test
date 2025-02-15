@@ -18,12 +18,10 @@ const register = async (req, res) => {
       password: hashedPassword,
     });
 
-    return res
-      .status(201)
-      .json({
-        message: "User registered successfully",
-        user: { ...newUser.toJSON(), password: undefined },
-      });
+    return res.status(201).json({
+      message: "User registered successfully",
+      user: { ...newUser.toJSON(), password: undefined },
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -61,7 +59,12 @@ const login = async (req, res) => {
       message: "Login successful",
       access_token,
       refresh_token,
-      user: { ...user.toJSON(), password: undefined },
+      user: {
+        ...user.toJSON(),
+        position: "Software Engineer",
+        image: "https://cdn-icons-png.flaticon.com/512/4128/4128244.png",
+        password: undefined,
+      },
     });
   } catch (error) {
     console.error(error);
@@ -145,7 +148,6 @@ const changePassword = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 // ฟังก์ชันในการร้องขอการเปลี่ยนรหัสผ่าน (ขอ OTP)
 const requestPasswordChange = async (req, res) => {
